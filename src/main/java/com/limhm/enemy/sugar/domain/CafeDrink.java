@@ -12,6 +12,7 @@ import java.util.Optional;
 @Setter
 public class CafeDrink implements Beverage, ExcelExportable {
 
+    private Cafe cafe;
     private String name;
     private double calories;
     private double sugar;
@@ -20,8 +21,9 @@ public class CafeDrink implements Beverage, ExcelExportable {
     private double sodium;
     private double caffeine;
 
-    public CafeDrink(String name, String calories, String sugar, String protein,
+    public CafeDrink(Cafe cafe, String name, String calories, String sugar, String protein,
         String saturatedFat, String sodium, String caffeine) {
+        this.cafe = cafe;
         this.name = name;
         this.calories = parseDouble(calories);
         this.sugar = parseDouble(sugar);
@@ -29,6 +31,10 @@ public class CafeDrink implements Beverage, ExcelExportable {
         this.saturatedFat = parseDouble(saturatedFat);
         this.sodium = parseDouble(sodium);
         this.caffeine = parseDouble(caffeine);
+    }
+
+    public String getCafeKorName() {
+        return Optional.ofNullable(cafe.getKorName()).orElse("");
     }
 
     private double parseDouble(String str) {

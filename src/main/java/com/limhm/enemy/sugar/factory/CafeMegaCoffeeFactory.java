@@ -1,5 +1,6 @@
 package com.limhm.enemy.sugar.factory;
 
+import com.limhm.enemy.sugar.domain.Cafe;
 import com.limhm.enemy.sugar.domain.CafeFactory;
 import com.limhm.enemy.sugar.domain.CafeDrink;
 import org.jsoup.Jsoup;
@@ -42,6 +43,7 @@ public class CafeMegaCoffeeFactory implements CafeFactory {
     private Flux<CafeDrink> parse(String response) {
         return Flux.defer(() -> {
             List<CafeDrink> beverages = new ArrayList<>();
+            Cafe cafe = new Cafe(CAFE_KOR_NAME);
             try {
                 Document document = Jsoup.parse(response);
                 Objects.requireNonNull(document);
@@ -64,8 +66,8 @@ public class CafeMegaCoffeeFactory implements CafeFactory {
                         item.select(".cont_list li:contains(단백질)").text());
                     String caffeine = extractNumericValue(
                         item.select(".cont_list li:contains(카페인)").text());
-                    CafeDrink drink = new CafeDrink(name, calories, sugar, protein, saturatedFat,
-                        sodium, caffeine);
+                    CafeDrink drink = new CafeDrink(cafe, name, calories, sugar, protein,
+                        saturatedFat, sodium, caffeine);
                     beverages.add(drink);
                 }
             } catch (NullPointerException e) {

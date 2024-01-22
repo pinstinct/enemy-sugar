@@ -3,6 +3,7 @@ package com.limhm.enemy.sugar.factory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.limhm.enemy.sugar.domain.Cafe;
 import com.limhm.enemy.sugar.domain.CafeFactory;
 import com.limhm.enemy.sugar.domain.CafeDrink;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -36,7 +37,7 @@ public class CafeStarbucksFactory implements CafeFactory {
     private Flux<CafeDrink> parse(String response) {
         return Flux.defer(() -> {
             List<CafeDrink> beverages = new ArrayList<>();
-
+            Cafe cafe = new Cafe(CAFE_KOR_NAME);
             try {
                 ObjectMapper objectMapper = new ObjectMapper();
                 // JSON 문자열을 JsonNode로 변환
@@ -50,8 +51,8 @@ public class CafeStarbucksFactory implements CafeFactory {
                     String saturatedFat = node.path("sat_FAT").asText();
                     String sodium = node.path("sodium").asText();
                     String caffeine = node.path("caffeine").asText();
-                    CafeDrink drink = new CafeDrink(name, calories, sugar, protein, saturatedFat,
-                        sodium, caffeine);
+                    CafeDrink drink = new CafeDrink(cafe, name, calories, sugar, protein,
+                        saturatedFat, sodium, caffeine);
                     beverages.add(drink);
                 }
             } catch (JsonProcessingException e) {
