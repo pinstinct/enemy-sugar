@@ -13,6 +13,7 @@ import java.util.Optional;
 @Setter
 @ToString
 public class CafeDrink implements Beverage, ExcelExportable {
+
     private String name;
     private double calories;
     private double sugar;
@@ -22,7 +23,7 @@ public class CafeDrink implements Beverage, ExcelExportable {
     private double caffeine;
 
     public CafeDrink(String name, String calories, String sugar, String protein,
-                     String saturatedFat, String sodium, String caffeine) {
+        String saturatedFat, String sodium, String caffeine) {
         this.name = name;
         this.calories = parseDouble(calories);
         this.sugar = parseDouble(sugar);
@@ -34,15 +35,15 @@ public class CafeDrink implements Beverage, ExcelExportable {
 
     private double parseDouble(String str) {
         return Optional.ofNullable(str)
-                .map(Double::parseDouble)
-                .orElse(0.0);
+            .map(Double::parseDouble)
+            .orElse(0.0);
     }
 
     @Override
     public void writeRow(Row row) {
         CellStyle numericStyle = row.getSheet().getWorkbook().createCellStyle();
         numericStyle.setDataFormat(
-                row.getSheet().getWorkbook().getCreationHelper().createDataFormat().getFormat("0.00")
+            row.getSheet().getWorkbook().getCreationHelper().createDataFormat().getFormat("0.00")
         );
         createCell(row, 0, getName());
         createCellByStyle(row, 1, getCalories(), numericStyle);

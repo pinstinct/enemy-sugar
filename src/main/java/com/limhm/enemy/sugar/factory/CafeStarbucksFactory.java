@@ -12,24 +12,25 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CafeStarbucksFactory implements CafeFactory {
+
     private static final List<String> URLS = new ArrayList<>(List.of(
-            "https://www.starbucks.co.kr/upload/json/menu/W0000171.js",
-            "https://www.starbucks.co.kr/upload/json/menu/W0000060.js",
-            "https://www.starbucks.co.kr/upload/json/menu/W0000003.js",
-            "https://www.starbucks.co.kr/upload/json/menu/W0000004.js",
-            "https://www.starbucks.co.kr/upload/json/menu/W0000005.js",
-            "https://www.starbucks.co.kr/upload/json/menu/W0000422.js",
-            "https://www.starbucks.co.kr/upload/json/menu/W0000061.js",
-            "https://www.starbucks.co.kr/upload/json/menu/W0000075.js",
-            "https://www.starbucks.co.kr/upload/json/menu/W0000053.js",
-            "https://www.starbucks.co.kr/upload/json/menu/W0000062.js",
-            "https://www.starbucks.co.kr/upload/json/menu/W0000471.js"
+        "https://www.starbucks.co.kr/upload/json/menu/W0000171.js",
+        "https://www.starbucks.co.kr/upload/json/menu/W0000060.js",
+        "https://www.starbucks.co.kr/upload/json/menu/W0000003.js",
+        "https://www.starbucks.co.kr/upload/json/menu/W0000004.js",
+        "https://www.starbucks.co.kr/upload/json/menu/W0000005.js",
+        "https://www.starbucks.co.kr/upload/json/menu/W0000422.js",
+        "https://www.starbucks.co.kr/upload/json/menu/W0000061.js",
+        "https://www.starbucks.co.kr/upload/json/menu/W0000075.js",
+        "https://www.starbucks.co.kr/upload/json/menu/W0000053.js",
+        "https://www.starbucks.co.kr/upload/json/menu/W0000062.js",
+        "https://www.starbucks.co.kr/upload/json/menu/W0000471.js"
     ));
 
     @Override
     public Flux<CafeDrink> createBeverages() {
         return Flux.fromIterable(URLS)
-                .flatMap(this::fetchItems);
+            .flatMap(this::fetchItems);
     }
 
     private Flux<CafeDrink> parse(String response) {
@@ -41,7 +42,7 @@ public class CafeStarbucksFactory implements CafeFactory {
                 // JSON 문자열을 JsonNode로 변환
                 JsonNode root = objectMapper.readTree(response);
 
-                for (JsonNode node: root.path("list")) {
+                for (JsonNode node : root.path("list")) {
                     String name = node.path("product_NM").asText();
                     String calories = node.path("kcal").asText();
                     String sugar = node.path("sugars").asText();
@@ -49,7 +50,8 @@ public class CafeStarbucksFactory implements CafeFactory {
                     String saturatedFat = node.path("sat_FAT").asText();
                     String sodium = node.path("sodium").asText();
                     String caffeine = node.path("caffeine").asText();
-                    CafeDrink drink = new CafeDrink(name, calories, sugar, protein, saturatedFat, sodium, caffeine);
+                    CafeDrink drink = new CafeDrink(name, calories, sugar, protein, saturatedFat,
+                        sodium, caffeine);
                     beverages.add(drink);
                 }
             } catch (JsonProcessingException e) {
@@ -63,9 +65,9 @@ public class CafeStarbucksFactory implements CafeFactory {
     private Flux<CafeDrink> fetchItems(String url) {
         // WebClient 사용하여 비동기로 API 호출 후 결과를 Mono로 감싸어 반환
         return WebClient.create().get()
-                .uri(url)
-                .retrieve()
-                .bodyToMono(String.class)
-                .flatMapMany(this::parse);
+            .uri(url)
+            .retrieve()
+            .bodyToMono(String.class)
+            .flatMapMany(this::parse);
     }
 }
