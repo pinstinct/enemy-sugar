@@ -24,19 +24,19 @@ import java.util.Map;
 public class CafeController {
 
     private final ExcelExporter excelExporter;
+    private final CafeStarbucksFactory starbucks;
+    private final CafeMegaCoffeeFactory megaCoffee;
 
     @GetMapping(value = "/menu/down", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    ResponseEntity<InputStreamResource> getBody() {
-        CafeStarbucksFactory starbucks = new CafeStarbucksFactory();
+    public ResponseEntity<InputStreamResource> downloadMenu() {
         Flux<CafeDrink> starbucksMenu = starbucks.createBeverages();
-
-        CafeMegaCoffeeFactory megaCoffee = new CafeMegaCoffeeFactory();
         Flux<CafeDrink> megaCoffeeMenu = megaCoffee.createBeverages();
 
-        Map<String, List<CafeDrink>> allCafeMenu = Map.of(
-            "스타벅스", starbucksMenu.collectList().block(),
-            "메가커피", megaCoffeeMenu.collectList().block()
-        );
+        List<CafeDrink> a = starbucksMenu.collectList().block();
+        List<CafeDrink> b = megaCoffeeMenu.collectList().block();
+
+        Map<String, List<CafeDrink>> allCafeMenu = Map.of(a.get(0).getCafe().getKorName(), a,
+            b.get(0).getCafe().getKorName(), b);
 
         String[] header = {"이름", "칼로리", "포화지방", "당류", "나트륨", "단백질", "카페인"};
         byte[] excelBytes = excelExporter.generateExcel(allCafeMenu, header);
@@ -45,9 +45,7 @@ public class CafeController {
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=menu.xlsx");
 
-        return ResponseEntity.ok()
-            .headers(headers)
-            .contentType(MediaType.APPLICATION_OCTET_STREAM)
+        return ResponseEntity.ok().headers(headers).contentType(MediaType.APPLICATION_OCTET_STREAM)
             .body(resource);
     }
 }
