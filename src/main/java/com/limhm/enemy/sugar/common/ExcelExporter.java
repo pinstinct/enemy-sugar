@@ -1,4 +1,4 @@
-package com.limhm.enemy.sugar.component;
+package com.limhm.enemy.sugar.common;
 
 import com.limhm.enemy.sugar.templatemethod.ExcelExportable;
 import org.apache.poi.ss.usermodel.*;

@@ -1,7 +1,6 @@
 package com.limhm.enemy.sugar.factory;
 
 import com.limhm.enemy.sugar.domain.Cafe;
-import com.limhm.enemy.sugar.domain.CafeFactory;
 import com.limhm.enemy.sugar.domain.CafeDrink;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
