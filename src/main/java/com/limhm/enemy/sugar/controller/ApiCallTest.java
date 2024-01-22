@@ -19,13 +19,13 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/call")
+@RequestMapping("/cafe")
 @RequiredArgsConstructor
 public class ApiCallTest {
 
     private final ExcelExporter excelExporter;
 
-    @GetMapping(produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    @GetMapping(value = "/menu/down", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     ResponseEntity<InputStreamResource> getBody() {
         CafeStarbucksFactory starbucks = new CafeStarbucksFactory();
         Flux<CafeDrink> starbucksMenu = starbucks.createBeverages();
