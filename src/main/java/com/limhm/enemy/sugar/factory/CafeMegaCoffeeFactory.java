@@ -50,9 +50,10 @@ public class CafeMegaCoffeeFactory implements CafeFactory {
                 Elements items = menu.select("> li");
 
                 for (Element item : items) {
-                    String name = item.select(".cont_text_title b").text();
+                    String name = item.select(".cont_text_title b").first().text();
                     String calories = extractNumericValue(
-                        item.select(".cont_text_inner:contains(1회 제공량)").text());
+                        item.select(".cont_text_inner:contains(1회 제공량)").text()
+                            .replace("1회 제공량", ""));
                     String saturatedFat = extractNumericValue(
                         item.select(".cont_list li:contains(포화지방)").text());
                     String sugar = extractNumericValue(
