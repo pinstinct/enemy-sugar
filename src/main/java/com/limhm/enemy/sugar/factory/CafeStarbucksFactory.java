@@ -5,14 +5,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.limhm.enemy.sugar.domain.CafeFactory;
 import com.limhm.enemy.sugar.domain.CafeDrink;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class CafeStarbucksFactory implements CafeFactory {
     private static final List<String> URLS = new ArrayList<>(List.of(
@@ -29,53 +26,46 @@ public class CafeStarbucksFactory implements CafeFactory {
             "https://www.starbucks.co.kr/upload/json/menu/W0000471.js"
     ));
 
-    @Autowired
-    private final WebClient webClient = WebClient.builder().build();
-
     @Override
-    public List<CafeDrink> createBeverages() {
-        return fetchMenus().collectList().block();
+    public Flux<CafeDrink> createBeverages() {
+        return Flux.fromIterable(URLS)
+                .flatMap(this::fetchItems);
     }
 
-    private List<CafeDrink> parse(String response) {
-        ObjectMapper objectMapper = new ObjectMapper();
-        List<CafeDrink> items = new ArrayList<>();
+    private Flux<CafeDrink> parse(String response) {
+        return Flux.defer(() -> {
+            List<CafeDrink> beverages = new ArrayList<>();
 
-        try {
-            // JSON 문자열을 JsonNode로 변환
-            JsonNode root = objectMapper.readTree(response);
+            try {
+                ObjectMapper objectMapper = new ObjectMapper();
+                // JSON 문자열을 JsonNode로 변환
+                JsonNode root = objectMapper.readTree(response);
 
-            for (JsonNode node: root.path("list")) {
-                CafeDrink cafeDrink = new CafeDrink(
-                        node.path("product_NM").asText(),
-                        node.path("kcal").asText(),
-                        node.path("sugars").asText(),
-                        node.path("protein").asText(),
-                        node.path("sat_FAT").asText(),
-                        node.path("sodium").asText(),
-                        node.path("caffeine").asText()
-                );
-                items.add(cafeDrink);
+                for (JsonNode node: root.path("list")) {
+                    String name = node.path("product_NM").asText();
+                    String calories = node.path("kcal").asText();
+                    String sugar = node.path("sugars").asText();
+                    String protein = node.path("protein").asText();
+                    String saturatedFat = node.path("sat_FAT").asText();
+                    String sodium = node.path("sodium").asText();
+                    String caffeine = node.path("caffeine").asText();
+                    CafeDrink drink = new CafeDrink(name, calories, sugar, protein, saturatedFat, sodium, caffeine);
+                    beverages.add(drink);
+                }
+            } catch (JsonProcessingException e) {
+//                e.printStackTrace();
+                return Flux.error(e);
             }
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
-        return items;
+            return Flux.fromIterable(beverages);
+        });
     }
 
-    private Flux<CafeDrink> fetchMenus() {
-        List<Mono<List<CafeDrink>>> results = URLS.stream()
-                .map(this::fetchMenu)
-                .collect(Collectors.toList());
-        return Flux.concat(results).flatMapIterable(items -> items);
-    }
-
-    private Mono<List<CafeDrink>> fetchMenu(String url) {
+    private Flux<CafeDrink> fetchItems(String url) {
         // WebClient 사용하여 비동기로 API 호출 후 결과를 Mono로 감싸어 반환
-        return webClient.get()
+        return WebClient.create().get()
                 .uri(url)
                 .retrieve()
                 .bodyToMono(String.class)
-                .map(this::parse);
+                .flatMapMany(this::parse);
     }
 }
