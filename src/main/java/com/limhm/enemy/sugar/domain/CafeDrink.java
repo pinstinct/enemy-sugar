@@ -38,17 +38,14 @@ public class CafeDrink implements Beverage, ExcelExportable {
     }
 
     private double parseDouble(String str) {
-        return Optional.ofNullable(str)
-            .map(Double::parseDouble)
-            .orElse(0.0);
+        return Optional.ofNullable(str).map(Double::parseDouble).orElse(0.0);
     }
 
     @Override
     public void writeRow(Row row) {
         CellStyle numericStyle = row.getSheet().getWorkbook().createCellStyle();
         numericStyle.setDataFormat(
-            row.getSheet().getWorkbook().getCreationHelper().createDataFormat().getFormat("0.0")
-        );
+            row.getSheet().getWorkbook().getCreationHelper().createDataFormat().getFormat("0.0"));
         createCell(row, 0, getName());
         createCellByStyle(row, 1, getCalories(), numericStyle);
         createCellByStyle(row, 2, getSaturatedFat(), numericStyle);

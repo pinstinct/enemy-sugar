@@ -6,32 +6,33 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.limhm.enemy.sugar.domain.Cafe;
 import com.limhm.enemy.sugar.domain.CafeFactory;
 import com.limhm.enemy.sugar.domain.CafeDrink;
+import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Component
 public class CafeStarbucksFactory implements CafeFactory {
 
-    private static final List<String> URLS = new ArrayList<>(List.of(
-        "https://www.starbucks.co.kr/upload/json/menu/W0000171.js",
-        "https://www.starbucks.co.kr/upload/json/menu/W0000060.js",
-        "https://www.starbucks.co.kr/upload/json/menu/W0000003.js",
-        "https://www.starbucks.co.kr/upload/json/menu/W0000004.js",
-        "https://www.starbucks.co.kr/upload/json/menu/W0000005.js",
-        "https://www.starbucks.co.kr/upload/json/menu/W0000422.js",
-        "https://www.starbucks.co.kr/upload/json/menu/W0000061.js",
-        "https://www.starbucks.co.kr/upload/json/menu/W0000075.js",
-        "https://www.starbucks.co.kr/upload/json/menu/W0000053.js",
-        "https://www.starbucks.co.kr/upload/json/menu/W0000062.js",
-        "https://www.starbucks.co.kr/upload/json/menu/W0000471.js"
-    ));
+    private static final List<String> URLS = new ArrayList<>(
+        List.of("https://www.starbucks.co.kr/upload/json/menu/W0000171.js",
+            "https://www.starbucks.co.kr/upload/json/menu/W0000060.js",
+            "https://www.starbucks.co.kr/upload/json/menu/W0000003.js",
+            "https://www.starbucks.co.kr/upload/json/menu/W0000004.js",
+            "https://www.starbucks.co.kr/upload/json/menu/W0000005.js",
+            "https://www.starbucks.co.kr/upload/json/menu/W0000422.js",
+            "https://www.starbucks.co.kr/upload/json/menu/W0000061.js",
+            "https://www.starbucks.co.kr/upload/json/menu/W0000075.js",
+            "https://www.starbucks.co.kr/upload/json/menu/W0000053.js",
+            "https://www.starbucks.co.kr/upload/json/menu/W0000062.js",
+            "https://www.starbucks.co.kr/upload/json/menu/W0000471.js"));
+    private static final String CAFE_KOR_NAME = "스타벅스";
 
     @Override
     public Flux<CafeDrink> createBeverages() {
-        return Flux.fromIterable(URLS)
-            .flatMap(this::fetchItems);
+        return Flux.fromIterable(URLS).flatMap(this::fetchItems);
     }
 
     private Flux<CafeDrink> parse(String response) {
@@ -65,10 +66,7 @@ public class CafeStarbucksFactory implements CafeFactory {
 
     private Flux<CafeDrink> fetchItems(String url) {
         // WebClient 사용하여 비동기로 API 호출 후 결과를 Mono로 감싸어 반환
-        return WebClient.create().get()
-            .uri(url)
-            .retrieve()
-            .bodyToMono(String.class)
+        return WebClient.create().get().uri(url).retrieve().bodyToMono(String.class)
             .flatMapMany(this::parse);
     }
 }

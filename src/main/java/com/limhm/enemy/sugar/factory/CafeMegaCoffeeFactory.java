@@ -7,6 +7,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 
@@ -14,13 +15,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+@Component
 public class CafeMegaCoffeeFactory implements CafeFactory {
+
+    private static final String BASE = "https://www.mega-mgccoffee.com/menu/menu.php?menu_category1=1&menu_category2=1&category=&list_checkbox_all=all&page=";
+    private static final String CAFE_KOR_NAME = "메가커피";
 
     @Override
     public Flux<CafeDrink> createBeverages() {
-        String base = "https://www.mega-mgccoffee.com/menu/menu.php?menu_category1=1&menu_category2=1&category=&list_checkbox_all=all&page=";
-        return Flux.fromIterable(generateUrl(base, 1, 10))
-            .flatMap(this::fetchItems);
+        return Flux.fromIterable(generateUrl(BASE, 1, 10)).flatMap(this::fetchItems);
     }
 
     private static List<String> generateUrl(String base, int start, int end) {
@@ -33,10 +36,7 @@ public class CafeMegaCoffeeFactory implements CafeFactory {
     }
 
     private Flux<CafeDrink> fetchItems(String url) {
-        return WebClient.create().get()
-            .uri(url)
-            .retrieve()
-            .bodyToMono(String.class)
+        return WebClient.create().get().uri(url).retrieve().bodyToMono(String.class)
             .flatMapMany(this::parse);
     }
 
