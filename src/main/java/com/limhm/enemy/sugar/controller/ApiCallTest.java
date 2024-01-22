@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Flux;
 
 import java.io.ByteArrayInputStream;
 import java.util.List;
@@ -24,17 +25,17 @@ public class ApiCallTest {
 
     private final ExcelExporter excelExporter;
 
-    @GetMapping
+    @GetMapping(produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     ResponseEntity<InputStreamResource> getBody() {
         CafeStarbucksFactory starbucks = new CafeStarbucksFactory();
-        List<CafeDrink> starbucksMenu = starbucks.createBeverages();
-
+        Flux<CafeDrink> starbucksMenu = starbucks.createBeverages();
+        
         CafeMegaCoffeeFactory megaCoffee = new CafeMegaCoffeeFactory();
-        List<CafeDrink> megaCoffeeMenu = megaCoffee.createBeverages();
+        Flux<CafeDrink> megaCoffeeMenu = megaCoffee.createBeverages();
 
         Map<String, List<CafeDrink>> allCafeMenu = Map.of(
-                "스타벅스", starbucksMenu,
-                "메가커피", megaCoffeeMenu
+                "스타벅스", starbucksMenu.collectList().block(),
+                "메가커피", megaCoffeeMenu.collectList().block()
         );
 
         byte[] excelBytes = excelExporter.generateExcel(allCafeMenu);

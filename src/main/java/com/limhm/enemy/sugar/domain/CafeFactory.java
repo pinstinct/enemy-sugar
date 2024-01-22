@@ -1,7 +1,7 @@
 package com.limhm.enemy.sugar.domain;
 
-import java.util.List;
+import reactor.core.publisher.Flux;
 
 public interface CafeFactory {
-    List<CafeDrink> createBeverages();
+    Flux<CafeDrink> createBeverages();
 }
