@@ -43,7 +43,7 @@ public class CafeDrink implements Beverage, ExcelExportable {
     public void writeRow(Row row) {
         CellStyle numericStyle = row.getSheet().getWorkbook().createCellStyle();
         numericStyle.setDataFormat(
-            row.getSheet().getWorkbook().getCreationHelper().createDataFormat().getFormat("0.00")
+            row.getSheet().getWorkbook().getCreationHelper().createDataFormat().getFormat("0.0")
         );
         createCell(row, 0, getName());
         createCellByStyle(row, 1, getCalories(), numericStyle);
