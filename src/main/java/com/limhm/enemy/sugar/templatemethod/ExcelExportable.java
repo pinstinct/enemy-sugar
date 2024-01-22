@@ -13,14 +13,9 @@ public interface ExcelExportable {
         cell.setCellValue(value);
     }
 
-    ;
-
     default void createCellByStyle(Row row, int columnIndex, Double value, CellStyle style) {
         Cell cell = row.createCell(columnIndex);
         cell.setCellValue(value);
         cell.setCellStyle(style);
     }
-
-    ;
-
 }
