@@ -21,7 +21,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/cafe")
 @RequiredArgsConstructor
-public class ApiCallTest {
+public class CafeController {
 
     private final ExcelExporter excelExporter;
 
