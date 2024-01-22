@@ -1,10 +1,7 @@
 package com.limhm.enemy.sugar.component;
 
-import com.limhm.enemy.sugar.domain.CafeDrink;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import com.limhm.enemy.sugar.templatemethod.ExcelExportable;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Component;
 
@@ -16,11 +13,10 @@ import java.util.Map;
 @Component
 @SuppressWarnings("CallToPrintStackTrace")
 public class ExcelExporter {
-    public byte[] generateExcel(Map<String, List<CafeDrink>> menus) {
+    public <T extends ExcelExportable> byte[] generateExcel(Map<String, List<T>> menus, String[] headers) {
         try (Workbook workbook = new XSSFWorkbook();
              ByteArrayOutputStream outputStream = new ByteArrayOutputStream()){
-            menus.forEach((sheetName, items) -> createSheet(workbook, sheetName, items));
-
+            menus.forEach((sheetName, items) -> createSheet(workbook, sheetName, items, headers));
             workbook.write(outputStream);
             return outputStream.toByteArray();
         } catch (IOException e) {
@@ -29,26 +25,22 @@ public class ExcelExporter {
         }
     }
 
-    private void createSheet(Workbook workbook, String sheetName, List<CafeDrink> items) {
+    private <T extends ExcelExportable> void createSheet(Workbook workbook, String sheetName, List<T> items, String[] headers) {
         Sheet sheet = workbook.createSheet(sheetName);
+        createHeader(sheet, headers);
 
+        int rowIndex = 1;
+        for (T item: items) {
+            Row row = sheet.createRow(rowIndex++);
+            item.writeRow(row);
+        }
+    }
+
+    private void createHeader(Sheet sheet, String[] headers) {
         Row header = sheet.createRow(0);
-        String[] headers = {"이름", "칼로리", "포화지방", "당류", "나트륨", "단백질", "카페인"};
         for (int i = 0; i < headers.length; i++) {
             Cell cell = header.createCell(i);
             cell.setCellValue(headers[i]);
-        }
-
-        int rowIndex = 1;
-        for (CafeDrink item: items) {
-            Row row = sheet.createRow(rowIndex++);
-            row.createCell(0).setCellValue(item.getName());
-            row.createCell(1).setCellValue(item.getCalories());
-            row.createCell(2).setCellValue(item.getSaturatedFat());
-            row.createCell(3).setCellValue(item.getSugar());
-            row.createCell(4).setCellValue(item.getSodium());
-            row.createCell(5).setCellValue(item.getProtein());
-            row.createCell(6).setCellValue(item.getCaffeine());
         }
     }
 }

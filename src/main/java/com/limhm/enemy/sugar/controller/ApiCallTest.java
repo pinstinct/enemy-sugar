@@ -38,7 +38,8 @@ public class ApiCallTest {
                 "메가커피", megaCoffeeMenu.collectList().block()
         );
 
-        byte[] excelBytes = excelExporter.generateExcel(allCafeMenu);
+        String[] header = {"이름", "칼로리", "포화지방", "당류", "나트륨", "단백질", "카페인"};
+        byte[] excelBytes = excelExporter.generateExcel(allCafeMenu, header);
         InputStreamResource resource = new InputStreamResource(new ByteArrayInputStream(excelBytes));
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=menu.xlsx");
