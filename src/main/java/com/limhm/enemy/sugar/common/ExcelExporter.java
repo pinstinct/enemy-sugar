@@ -14,11 +14,12 @@ import java.util.Map;
 @SuppressWarnings("CallToPrintStackTrace")
 public class ExcelExporter {
 
-    public <T extends ExcelExportable> byte[] generateExcel(Map<String, List<T>> menus,
+    public <T extends ExcelExportable> byte[] generateExcel(Map<String, List<T>> sheetData,
         String[] headers) {
         try (Workbook workbook = new XSSFWorkbook();
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-            menus.forEach((sheetName, items) -> createSheet(workbook, sheetName, items, headers));
+            sheetData.forEach(
+                (sheetName, items) -> createSheet(workbook, sheetName, items, headers));
             workbook.write(outputStream);
             return outputStream.toByteArray();
         } catch (IOException e) {
