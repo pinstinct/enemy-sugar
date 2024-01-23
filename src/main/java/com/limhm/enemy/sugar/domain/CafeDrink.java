@@ -1,6 +1,6 @@
 package com.limhm.enemy.sugar.domain;
 
-import com.limhm.enemy.sugar.templatemethod.ExcelExportable;
+import com.limhm.enemy.sugar.strategy.ExcelExportable;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.poi.ss.usermodel.CellStyle;

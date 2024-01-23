@@ -1,6 +1,6 @@
 package com.limhm.enemy.sugar.common;
 
-import com.limhm.enemy.sugar.templatemethod.ExcelExportable;
+import com.limhm.enemy.sugar.strategy.ExcelExportable;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Component;
