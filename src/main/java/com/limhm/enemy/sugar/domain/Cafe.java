@@ -7,6 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @AllArgsConstructor
-public class Cafe {
+public class Cafe implements Company {
+
     private String korName;
 }
