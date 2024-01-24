@@ -1,7 +1,12 @@
 package com.limhm.enemy.sugar.factory;
 
+import com.limhm.enemy.sugar.domain.Beverage;
 import com.limhm.enemy.sugar.domain.Cafe;
 import com.limhm.enemy.sugar.domain.CafeDrink;
+import com.limhm.enemy.sugar.domain.Company;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -10,10 +15,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-
 @Component
 public class CafeMegaCoffeeFactory implements CafeFactory {
 
@@ -21,7 +22,7 @@ public class CafeMegaCoffeeFactory implements CafeFactory {
     private static final String CAFE_KOR_NAME = "메가커피";
 
     @Override
-    public Flux<CafeDrink> createBeverages() {
+    public Flux<Beverage> createBeverage() {
         return Flux.fromIterable(generateUrl(BASE, 1, 10)).flatMap(this::fetchItems);
     }
 
@@ -34,15 +35,15 @@ public class CafeMegaCoffeeFactory implements CafeFactory {
         return urls;
     }
 
-    private Flux<CafeDrink> fetchItems(String url) {
+    private Flux<Beverage> fetchItems(String url) {
         return WebClient.create().get().uri(url).retrieve().bodyToMono(String.class)
             .flatMapMany(this::parse);
     }
 
-    private Flux<CafeDrink> parse(String response) {
+    private Flux<Beverage> parse(String response) {
         return Flux.defer(() -> {
-            List<CafeDrink> beverages = new ArrayList<>();
-            Cafe cafe = new Cafe(CAFE_KOR_NAME);
+            List<Beverage> beverages = new ArrayList<>();
+            Company cafe = new Cafe(CAFE_KOR_NAME);
             try {
                 Document document = Jsoup.parse(response);
                 Objects.requireNonNull(document);
@@ -65,12 +66,11 @@ public class CafeMegaCoffeeFactory implements CafeFactory {
                         item.select(".cont_list li:contains(단백질)").text());
                     String caffeine = extractNumericValue(
                         item.select(".cont_list li:contains(카페인)").text());
-                    CafeDrink drink = new CafeDrink(cafe, name, calories, sugar, protein,
+                    Beverage drink = new CafeDrink(cafe, name, calories, sugar, protein,
                         saturatedFat, sodium, caffeine);
                     beverages.add(drink);
                 }
             } catch (NullPointerException e) {
-//                e.printStackTrace();
                 return Flux.error(e);
             }
             return Flux.fromIterable(beverages);
