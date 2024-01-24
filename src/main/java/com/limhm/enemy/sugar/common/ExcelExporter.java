@@ -1,20 +1,25 @@
 package com.limhm.enemy.sugar.common;
 
 import com.limhm.enemy.sugar.strategy.ExcelExportable;
-import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.springframework.stereotype.Component;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.stereotype.Component;
 
+/**
+ * ExcelExportable 인터페이스를 구현한 클래스의 데이터를 엑셀로 출력한다.
+ */
 @Component
-@SuppressWarnings("CallToPrintStackTrace")
 public class ExcelExporter {
 
-    public <T extends ExcelExportable> byte[] generateExcel(Map<String, List<T>> sheetData,
+    public <T extends ExcelExportable> byte[] generateExcel(
+        Map<String, List<T>> sheetData,
         String[] headers) {
         try (Workbook workbook = new XSSFWorkbook();
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
@@ -23,7 +28,6 @@ public class ExcelExporter {
             workbook.write(outputStream);
             return outputStream.toByteArray();
         } catch (IOException e) {
-            e.printStackTrace();
             return new byte[0];
         }
     }
