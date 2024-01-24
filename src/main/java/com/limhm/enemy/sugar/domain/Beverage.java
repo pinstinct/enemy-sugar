@@ -1,5 +1,8 @@
 package com.limhm.enemy.sugar.domain;
 
-public interface Beverage {
+import com.limhm.enemy.sugar.strategy.ExcelExportable;
 
+public interface Beverage extends ExcelExportable {
+
+    Company getCompany();
 }

@@ -10,7 +10,7 @@ import java.util.Optional;
 
 @Getter
 @Setter
-public class CafeDrink implements Beverage, ExcelExportable {
+public class CafeDrink implements Beverage {
 
     private Cafe cafe;
     private String name;
