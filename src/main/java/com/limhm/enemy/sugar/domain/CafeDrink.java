@@ -1,18 +1,16 @@
 package com.limhm.enemy.sugar.domain;
 
-import com.limhm.enemy.sugar.strategy.ExcelExportable;
+import java.util.Optional;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Row;
 
-import java.util.Optional;
-
 @Getter
 @Setter
 public class CafeDrink implements Beverage {
 
-    private Cafe cafe;
+    private Company company;
     private String name;
     private double calories;
     private double sugar;
@@ -21,9 +19,9 @@ public class CafeDrink implements Beverage {
     private double sodium;
     private double caffeine;
 
-    public CafeDrink(Cafe cafe, String name, String calories, String sugar, String protein,
+    public CafeDrink(Company company, String name, String calories, String sugar, String protein,
         String saturatedFat, String sodium, String caffeine) {
-        this.cafe = cafe;
+        this.company = company;
         this.name = name;
         this.calories = parseDouble(calories);
         this.sugar = parseDouble(sugar);
@@ -33,10 +31,15 @@ public class CafeDrink implements Beverage {
         this.caffeine = parseDouble(caffeine);
     }
 
-    public String getCafeKorName() {
-        return Optional.ofNullable(cafe.getKorName()).orElse("");
-    }
-
+    /**
+     * Optional 클래스: (Wrapper class) NullPointerException 간단히 회피하기 위해 사용한다. of() 혹은 ofNullable()
+     * 메소드를 사용해 Optional 객체를 생성한다.
+     * <p>
+     * map(Function mapper): 파라미터로 넣은 함수를 적용한 값(Optional)을 반환한다.
+     * <p>
+     * 이중 콜론 연산자(Double Colon Operator, ::): value -> Double.parseDouble(value) =
+     * Double.parseDouble(value)
+     */
     private double parseDouble(String str) {
         return Optional.ofNullable(str).map(Double::parseDouble).orElse(0.0);
     }
