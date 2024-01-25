@@ -35,7 +35,7 @@ public class CafeDrink implements Beverage {
      * Optional 클래스: (Wrapper class) NullPointerException 간단히 회피하기 위해 사용한다. of() 혹은 ofNullable()
      * 메소드를 사용해 Optional 객체를 생성한다.
      * <p>
-     * map(Function mapper): 파라미터로 넣은 함수를 적용한 값(Optional)을 반환한다.
+     * map(Function mapper): 인자로 넘긴 함수를 적용한 값(Optional)을 반환한다.
      * <p>
      * 이중 콜론 연산자(Double Colon Operator, ::): value -> Double.parseDouble(value) =
      * Double.parseDouble(value)
