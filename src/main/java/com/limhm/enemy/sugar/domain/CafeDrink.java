@@ -41,7 +41,8 @@ public class CafeDrink implements Beverage {
      * Double.parseDouble(value)
      */
     private double parseDouble(String str) {
-        return Optional.ofNullable(str).map(Double::parseDouble).orElse(0.0);
+        return Optional.ofNullable(str).filter(s -> !s.isEmpty()).map(Double::parseDouble)
+            .orElse(0.0);
     }
 
     @Override
