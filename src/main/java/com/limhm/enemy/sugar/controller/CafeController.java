@@ -2,6 +2,7 @@ package com.limhm.enemy.sugar.controller;
 
 import com.limhm.enemy.sugar.common.ExcelExporter;
 import com.limhm.enemy.sugar.domain.Beverage;
+import com.limhm.enemy.sugar.factory.CafeComposeCoffeeFactory;
 import com.limhm.enemy.sugar.factory.CafeMegaCoffeeFactory;
 import com.limhm.enemy.sugar.factory.CafeStarbucksFactory;
 import java.io.ByteArrayInputStream;
@@ -29,6 +30,7 @@ public class CafeController {
     private final ExcelExporter excelExporter;
     private final CafeStarbucksFactory starbucks;
     private final CafeMegaCoffeeFactory megaCoffee;
+    private final CafeComposeCoffeeFactory composeCoffee;
 
     /**
      * collectList(): Flux에서 넘어오는 항목들을 하나의 리스트로 모은 Mono로 변환(Mono<List<T>>)한다.
@@ -42,7 +44,8 @@ public class CafeController {
     @GetMapping(value = "/menu/down", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public Mono<ResponseEntity<InputStreamResource>> downloadMenu() {
         List<Mono<List<Beverage>>> allCafeMenuMono = Arrays.asList(
-            starbucks.createBeverage().collectList(), megaCoffee.createBeverage().collectList());
+            starbucks.createBeverage().collectList(), megaCoffee.createBeverage().collectList(),
+            composeCoffee.createBeverage().collectList());
 
         return Flux.merge(allCafeMenuMono)
             .collectMap(menu -> menu.get(0).getCompany().getKorName())
