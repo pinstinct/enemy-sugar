@@ -3,6 +3,7 @@ package com.limhm.enemy.sugar.controller;
 import com.limhm.enemy.sugar.common.ExcelExporter;
 import com.limhm.enemy.sugar.domain.Beverage;
 import com.limhm.enemy.sugar.factory.CafeComposeCoffeeFactory;
+import com.limhm.enemy.sugar.factory.CafeEdiyaFactory;
 import com.limhm.enemy.sugar.factory.CafeMegaCoffeeFactory;
 import com.limhm.enemy.sugar.factory.CafePaikDaBangFactory;
 import com.limhm.enemy.sugar.factory.CafeStarbucksFactory;
@@ -33,6 +34,7 @@ public class CafeController {
     private final CafeMegaCoffeeFactory megaCoffee;
     private final CafeComposeCoffeeFactory composeCoffee;
     private final CafePaikDaBangFactory paikDaBang;
+    private final CafeEdiyaFactory ediya;
 
     /**
      * collectList(): Flux에서 넘어오는 항목들을 하나의 리스트로 모은 Mono로 변환(Mono<List<T>>)한다.
@@ -48,7 +50,7 @@ public class CafeController {
         List<Mono<List<Beverage>>> allCafeMenuMono = Arrays.asList(
             starbucks.createBeverage().collectList(), megaCoffee.createBeverage().collectList(),
             composeCoffee.createBeverage().collectList(),
-            paikDaBang.createBeverage().collectList());
+            paikDaBang.createBeverage().collectList(), ediya.createBeverage().collectList());
 
         return Flux.merge(allCafeMenuMono)
             .collectMap(menu -> menu.get(0).getCompany().getKorName())
