@@ -18,22 +18,22 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 
 @Component
 public class CafeTwosomePlaceCoffeeFactory implements CafeFactory {
 
-    private static final String BASE = "https://mo.twosome.co.kr/mn";
-    private static final int START = 1;
-    private static final int END = 1;
+    private static final String BASE_URL = "https://mo.twosome.co.kr/mn";
+    private static final int START_PAGE = 1;
+    private static final int END_PAGE = 5;
+    private static final List<String> MID_CDS = new ArrayList<>(List.of("01", "02", "03"));
     private static final String CAFE_KOR_NAME = "투썸플레이스";
 
     private final WebClient webClient;
 
     public CafeTwosomePlaceCoffeeFactory() {
-        this.webClient = WebClient.builder().baseUrl(BASE)
+        this.webClient = WebClient.builder().baseUrl(BASE_URL)
             .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED_VALUE)
             .build();
     }
@@ -67,9 +67,8 @@ public class CafeTwosomePlaceCoffeeFactory implements CafeFactory {
 
     @Override
     public Flux<Beverage> createBeverage() {
-        List<String> midCds = new ArrayList<>(List.of("01", "02", "03"));
-        return Flux.range(START, END)
-            .flatMap(page -> Flux.fromIterable(midCds).flatMap(midCd -> fetchItems(page, midCd)))
+        return Flux.range(START_PAGE, END_PAGE)
+            .flatMap(page -> Flux.fromIterable(MID_CDS).flatMap(midCd -> fetchItems(page, midCd)))
             .flatMap(this::fetchTemperatureOptions).flatMap(this::fetchSizeOptions)
             .flatMap(this::fetchInfo);
     }
@@ -77,7 +76,7 @@ public class CafeTwosomePlaceCoffeeFactory implements CafeFactory {
     private Flux<CafeTwosomeRequestBody> fetchItems(int page, String midCd) {
         MultiValueMap<String, String> parameters = createRequestBodyForMenuInfoList(page, midCd);
         return webClient.post().uri("/menuInfoListAjax.json")
-            .body(BodyInserters.fromFormData(parameters)).retrieve().bodyToMono(String.class)
+            .bodyValue(parameters).retrieve().bodyToMono(String.class)
             .flatMapMany(this::parseMenuNameAndCode);
     }
 
