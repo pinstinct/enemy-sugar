@@ -122,6 +122,7 @@ public class CafeTwosomePlaceCoffeeFactory implements CafeFactory {
             }
         } catch (JsonProcessingException e) {
             e.printStackTrace();
+            return Flux.error(e);
         }
         return Flux.empty();
     }
@@ -164,10 +165,14 @@ public class CafeTwosomePlaceCoffeeFactory implements CafeFactory {
             }
         } catch (JsonProcessingException e) {
             e.printStackTrace();
+            return Flux.error(e);
         }
         return Flux.empty();
     }
 
+    /**
+     * just() 사용
+     */
     private Flux<Beverage> parseInfo(String response, CafeTwosomeRequestBody request) {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
@@ -187,6 +192,7 @@ public class CafeTwosomePlaceCoffeeFactory implements CafeFactory {
             }
         } catch (JsonProcessingException e) {
             e.printStackTrace();
+            return Flux.error(e);
         }
         return Flux.empty();
     }
