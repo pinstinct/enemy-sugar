@@ -20,11 +20,9 @@ public class CafeMegaCoffeeFactory implements CafeFactory {
     /**
      * static으로 지정된 객체들을 먼저 메모리에 할당한다.
      */
-    private static final String BASE = "https://www.mega-mgccoffee.com/menu/menu.php?menu_category1=1&menu_category2=1&category=&list_checkbox_all=all&page=";
-    private static final int START = 1;
-    private static final int END = 10;
-
-    private static final List<String> URLS = generateUrl();
+    private static final String BASE_URL = "https://www.mega-mgccoffee.com/menu/menu.php?menu_category1=1&menu_category2=1&category=&list_checkbox_all=all&page=";
+    private static final int START_PAGE = 1;
+    private static final int END_PAGE = 10;
 
     /**
      * final은 한번만 할당하고 수정할 수 없다.
@@ -33,8 +31,8 @@ public class CafeMegaCoffeeFactory implements CafeFactory {
 
     private static List<String> generateUrl() {
         List<String> urls = new ArrayList<>();
-        for (int i = START; i <= END; i++) {
-            String url = BASE + i;
+        for (int i = START_PAGE; i <= END_PAGE; i++) {
+            String url = BASE_URL + i;
             urls.add(url);
         }
         return urls;
