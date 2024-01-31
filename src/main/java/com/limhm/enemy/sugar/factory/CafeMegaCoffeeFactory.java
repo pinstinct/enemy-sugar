@@ -56,7 +56,7 @@ public class CafeMegaCoffeeFactory implements CafeFactory {
      */
     @Override
     public Flux<Beverage> createBeverage() {
-        return Flux.fromIterable(URLS).flatMap(this::fetchItems);
+        return Flux.defer(() -> Flux.fromIterable(generateUrl()).flatMap(this::fetchItems));
     }
 
     /**
@@ -70,7 +70,9 @@ public class CafeMegaCoffeeFactory implements CafeFactory {
      */
     private Flux<Beverage> fetchItems(String url) {
         return WebClient.create().get().uri(url).retrieve().bodyToMono(String.class)
-            .flatMapMany(this::parse);
+            .flatMapMany(this::parse)
+            .onErrorResume(
+                e -> Flux.error(new RuntimeException("Failed to fetch items from " + url, e)));
     }
 
     /**
@@ -108,8 +110,8 @@ public class CafeMegaCoffeeFactory implements CafeFactory {
                         saturatedFat, sodium, caffeine);
                     beverages.add(drink);
                 }
-            } catch (NullPointerException e) {
-                return Flux.error(e);
+            } catch (Exception e) {
+                return Flux.error(new RuntimeException("Failed to parse response", e));
             }
             return Flux.fromIterable(beverages);
         });
