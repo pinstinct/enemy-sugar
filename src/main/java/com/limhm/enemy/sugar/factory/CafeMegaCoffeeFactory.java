@@ -89,37 +89,35 @@ public class CafeMegaCoffeeFactory implements CafeFactory {
      * select(String cssQuery): 인수와 일치하는 모든 요소들을 반환한다.
      */
     private Flux<Beverage> parse(String response) {
-        return Flux.defer(() -> {
-            List<Beverage> beverages = new ArrayList<>();
-            Company cafe = new Cafe(CAFE_KOR_NAME);
-            try {
-                Document document = Jsoup.parse(response);
-                Element menu = document.selectFirst("#menu_list");
-                Elements items = menu.select("> li");
+        List<Beverage> beverages = new ArrayList<>();
+        Company cafe = new Cafe(CAFE_KOR_NAME);
+        try {
+            Document document = Jsoup.parse(response);
+            Element menu = document.selectFirst("#menu_list");
+            Elements items = menu.select("> li");
 
-                for (Element item : items) {
-                    String name = item.select(".cont_text_title b").first().text();
-                    String calories = extractNumericValue(
-                        item.select(".cont_text_inner:contains(1회 제공량)").text()
-                            .replace("1회 제공량", ""));
-                    String saturatedFat = extractNumericValue(
-                        item.select(".cont_list li:contains(포화지방)").text());
-                    String sugar = extractNumericValue(
-                        item.select(".cont_list li:contains(당류)").text());
-                    String sodium = extractNumericValue(
-                        item.select(".cont_list li:contains(나트륨)").text());
-                    String protein = extractNumericValue(
-                        item.select(".cont_list li:contains(단백질)").text());
-                    String caffeine = extractNumericValue(
-                        item.select(".cont_list li:contains(카페인)").text());
-                    Beverage drink = new CafeDrink(cafe, name, calories, sugar, protein,
-                        saturatedFat, sodium, caffeine);
-                    beverages.add(drink);
-                }
-            } catch (Exception e) {
-                return Flux.error(new RuntimeException("Failed to parse response", e));
+            for (Element item : items) {
+                String name = item.select(".cont_text_title b").first().text();
+                String calories = extractNumericValue(
+                    item.select(".cont_text_inner:contains(1회 제공량)").text()
+                        .replace("1회 제공량", ""));
+                String saturatedFat = extractNumericValue(
+                    item.select(".cont_list li:contains(포화지방)").text());
+                String sugar = extractNumericValue(
+                    item.select(".cont_list li:contains(당류)").text());
+                String sodium = extractNumericValue(
+                    item.select(".cont_list li:contains(나트륨)").text());
+                String protein = extractNumericValue(
+                    item.select(".cont_list li:contains(단백질)").text());
+                String caffeine = extractNumericValue(
+                    item.select(".cont_list li:contains(카페인)").text());
+                Beverage drink = new CafeDrink(cafe, name, calories, sugar, protein,
+                    saturatedFat, sodium, caffeine);
+                beverages.add(drink);
             }
-            return Flux.fromIterable(beverages);
-        });
+        } catch (Exception e) {
+            return Flux.error(new ParseException("Failed to parse response: " + response, e));
+        }
+        return Flux.fromIterable(beverages);
     }
 }
