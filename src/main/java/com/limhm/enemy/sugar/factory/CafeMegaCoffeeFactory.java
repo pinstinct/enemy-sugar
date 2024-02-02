@@ -5,6 +5,8 @@ import com.limhm.enemy.sugar.domain.Beverage;
 import com.limhm.enemy.sugar.domain.Cafe;
 import com.limhm.enemy.sugar.domain.CafeDrink;
 import com.limhm.enemy.sugar.domain.Company;
+import com.limhm.enemy.sugar.exception.ConnectionException;
+import com.limhm.enemy.sugar.exception.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import org.jsoup.Jsoup;
@@ -75,8 +77,8 @@ public class CafeMegaCoffeeFactory implements CafeFactory {
     private Flux<Beverage> fetchItems(String path) {
         return webClient.get().uri(path).retrieve().bodyToMono(String.class)
             .flatMapMany(this::parse)
-            .onErrorResume(
-                e -> Flux.error(new RuntimeException("Failed to fetch items from " + url, e)));
+            .onErrorResume(e -> Flux.error(
+                new ConnectionException("Failed to fetch items from: " + BASE_URL + path, e)));
     }
 
     /**
