@@ -1,5 +1,6 @@
 package com.limhm.enemy.sugar.factory;
 
+import com.limhm.enemy.sugar.config.WebClientProvider;
 import com.limhm.enemy.sugar.domain.Beverage;
 import com.limhm.enemy.sugar.domain.Cafe;
 import com.limhm.enemy.sugar.domain.CafeDrink;
@@ -26,18 +27,8 @@ public class CafeMegaCoffeeFactory implements CafeFactory {
     private final String CAFE_KOR_NAME = "메가커피";
     private final WebClient webClient;
 
-    /**
-     * final은 한번만 할당하고 수정할 수 없다.
-     */
-    private static final String CAFE_KOR_NAME = "메가커피";
-
-    private static List<String> generateUrl() {
-        List<String> urls = new ArrayList<>();
-        for (int i = START_PAGE; i <= END_PAGE; i++) {
-            String url = BASE_URL + i;
-            urls.add(url);
-        }
-        return urls;
+    public CafeMegaCoffeeFactory(WebClientProvider webClientProvider) {
+        this.webClient = webClientProvider.provideWebClient(BASE_URL);
     }
 
     /**
@@ -70,8 +61,8 @@ public class CafeMegaCoffeeFactory implements CafeFactory {
      * <p>
      * flatMapMany(): Mono에서 Flux로 변환한다.
      */
-    private Flux<Beverage> fetchItems(String url) {
-        return WebClient.create().get().uri(url).retrieve().bodyToMono(String.class)
+    private Flux<Beverage> fetchItems(String path) {
+        return webClient.get().uri(path).retrieve().bodyToMono(String.class)
             .flatMapMany(this::parse)
             .onErrorResume(
                 e -> Flux.error(new RuntimeException("Failed to fetch items from " + url, e)));
