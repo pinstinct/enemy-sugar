@@ -13,6 +13,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Flux;
 
 @Component
@@ -39,6 +40,16 @@ public class CafeMegaCoffeeFactory implements CafeFactory {
         return numeric.isEmpty() ? "0" : numeric;
     }
 
+    private String buildUrl(Integer page) {
+        return UriComponentsBuilder.fromPath("/")
+            .queryParam("menu_category1", "1")
+            .queryParam("menu_category2", "1")
+            .queryParam("category", "")
+            .queryParam("list_checkbox_all", "all")
+            .queryParam("page", page)
+            .build().toUriString();
+    }
+
     /**
      * fromIterable(Iterable it): Iterable 인자를 넘기면 Iterable을 Flux로 변환
      * <p>
@@ -49,7 +60,7 @@ public class CafeMegaCoffeeFactory implements CafeFactory {
      */
     @Override
     public Flux<Beverage> createBeverage() {
-        return Flux.defer(() -> Flux.fromIterable(generateUrl()).flatMap(this::fetchItems));
+        return Flux.range(START_PAGE, END_PAGE).flatMap(page -> fetchItems(buildUrl(page)));
     }
 
     /**
