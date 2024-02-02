@@ -43,7 +43,7 @@ public class CafeMegaCoffeeFactory implements CafeFactory {
     /**
      * "포화지방 11.1g" 형식의 문자열에서 숫자만 추출해 반환한다.
      */
-    private static String extractNumericValue(String text) {
+    private String extractNumericValue(String text) {
         String numeric = text.replaceAll("[^\\d.]+", "");
         return numeric.isEmpty() ? "0" : numeric;
     }
