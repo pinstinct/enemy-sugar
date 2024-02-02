@@ -18,11 +18,13 @@ import reactor.core.publisher.Flux;
 public class CafeMegaCoffeeFactory implements CafeFactory {
 
     /**
-     * static으로 지정된 객체들을 먼저 메모리에 할당한다.
+     * final은 한번만 할당하고 수정할 수 없다.
      */
-    private static final String BASE_URL = "https://www.mega-mgccoffee.com/menu/menu.php?menu_category1=1&menu_category2=1&category=&list_checkbox_all=all&page=";
-    private static final int START_PAGE = 1;
-    private static final int END_PAGE = 10;
+    private final String BASE_URL = "https://www.mega-mgccoffee.com/menu/menu.php";
+    private final int START_PAGE = 1;
+    private final int END_PAGE = 10;
+    private final String CAFE_KOR_NAME = "메가커피";
+    private final WebClient webClient;
 
     /**
      * final은 한번만 할당하고 수정할 수 없다.
