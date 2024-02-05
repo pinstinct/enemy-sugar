@@ -2,6 +2,7 @@ package com.limhm.enemy.sugar.controller;
 
 import com.limhm.enemy.sugar.common.ExcelExporter;
 import com.limhm.enemy.sugar.domain.Beverage;
+import com.limhm.enemy.sugar.exception.ConnectionException;
 import com.limhm.enemy.sugar.factory.CafeComposeCoffeeFactory;
 import com.limhm.enemy.sugar.factory.CafeEdiyaFactory;
 import com.limhm.enemy.sugar.factory.CafeMegaCoffeeFactory;
@@ -50,9 +51,13 @@ public class CafeController {
     @GetMapping(value = "/menu/down", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public Mono<ResponseEntity<InputStreamResource>> downloadMenu() {
         List<Mono<List<Beverage>>> allCafeMenuMono = Arrays.asList(
-            starbucks.createBeverage().collectList(), megaCoffee.createBeverage().collectList(),
-            composeCoffee.createBeverage().collectList(), paikDaBang.createBeverage().collectList(),
-            ediya.createBeverage().collectList(), twosomePlace.createBeverage().collectList());
+            starbucks.createBeverage().collectList()
+            , megaCoffee.createBeverage().collectList()
+            , composeCoffee.createBeverage().collectList()
+            , paikDaBang.createBeverage().collectList()
+            , ediya.createBeverage().collectList()
+            , twosomePlace.createBeverage().collectList()
+        );
 
         return Flux.merge(allCafeMenuMono).collectMap(menu -> menu.get(0).getCompany().getKorName())
             .map(allCafeMenu -> {
@@ -65,6 +70,6 @@ public class CafeController {
 
                 return ResponseEntity.ok().headers(headers)
                     .contentType(MediaType.APPLICATION_OCTET_STREAM).body(resource);
-            });
+            }).onErrorResume(e -> Mono.error(new ConnectionException("test", e)));
     }
 }

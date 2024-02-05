@@ -7,8 +7,6 @@ import com.limhm.enemy.sugar.domain.CafeDrink;
 import com.limhm.enemy.sugar.domain.Company;
 import com.limhm.enemy.sugar.exception.ConnectionException;
 import com.limhm.enemy.sugar.exception.ParseException;
-import java.util.ArrayList;
-import java.util.List;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -77,8 +75,7 @@ public class CafeMegaCoffeeFactory implements CafeFactory {
     private Flux<Beverage> fetchItems(String path) {
         return webClient.get().uri(path).retrieve().bodyToMono(String.class)
             .flatMapMany(this::parse)
-            .onErrorResume(e -> Flux.error(
-                new ConnectionException("Failed to fetch items from: " + BASE_URL + path, e)));
+            .onErrorResume(e -> Flux.error(new ConnectionException(BASE_URL + path, e)));
     }
 
     /**
@@ -89,14 +86,13 @@ public class CafeMegaCoffeeFactory implements CafeFactory {
      * select(String cssQuery): 인수와 일치하는 모든 요소들을 반환한다.
      */
     private Flux<Beverage> parse(String response) {
-        List<Beverage> beverages = new ArrayList<>();
         Company cafe = new Cafe(CAFE_KOR_NAME);
         try {
             Document document = Jsoup.parse(response);
             Element menu = document.selectFirst("#menu_list");
             Elements items = menu.select("> li");
 
-            for (Element item : items) {
+            return Flux.fromIterable(items).map(item -> {
                 String name = item.select(".cont_text_title b").first().text();
                 String calories = extractNumericValue(
                     item.select(".cont_text_inner:contains(1회 제공량)").text()
@@ -113,11 +109,10 @@ public class CafeMegaCoffeeFactory implements CafeFactory {
                     item.select(".cont_list li:contains(카페인)").text());
                 Beverage drink = new CafeDrink(cafe, name, calories, sugar, protein,
                     saturatedFat, sodium, caffeine);
-                beverages.add(drink);
-            }
+                return drink;
+            });
         } catch (Exception e) {
-            return Flux.error(new ParseException("Failed to parse response: " + response, e));
+            return Flux.error(new ParseException(response, e));
         }
-        return Flux.fromIterable(beverages);
     }
 }

@@ -1,35 +1,32 @@
 package com.limhm.enemy.sugar.factory;
 
+import com.limhm.enemy.sugar.config.WebClientProvider;
 import com.limhm.enemy.sugar.domain.Beverage;
 import com.limhm.enemy.sugar.domain.Cafe;
 import com.limhm.enemy.sugar.domain.CafeDrink;
 import com.limhm.enemy.sugar.domain.Company;
-import java.util.ArrayList;
-import java.util.List;
+import com.limhm.enemy.sugar.exception.ConnectionException;
+import com.limhm.enemy.sugar.exception.ParseException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Flux;
 
 @Component
 public class CafeEdiyaFactory implements CafeFactory {
 
-    private static final String BASE = "https://ediya.com/inc/ajax_brand.php?gubun=menu_more&product_cate=7&chked_val=&skeyword=&page=";
-    private static final int START = 1;
-    private static final int END = 25;
-    private static final List<String> URLS = generateUrl();
+    private static final String BASE_URL = "https://ediya.com/inc/ajax_brand.php";
+    private static final int START_PAGE = 1;
+    private static final int END_PAGE = 25;
     private static final String CAFE_KOR_NAME = "이디야";
+    private final WebClient webClient;
 
-    private static List<String> generateUrl() {
-        List<String> urls = new ArrayList<>();
-        for (int i = START; i <= END; i++) {
-            String url = BASE + i;
-            urls.add(url);
-        }
-        return urls;
+    public CafeEdiyaFactory(WebClientProvider webClientProvider) {
+        this.webClient = webClientProvider.provideWebClient(BASE_URL);
     }
 
     /**
@@ -40,25 +37,36 @@ public class CafeEdiyaFactory implements CafeFactory {
         return numeric.isEmpty() ? "0" : numeric;
     }
 
-    @Override
-    public Flux<Beverage> createBeverage() {
-        return Flux.fromIterable(URLS).flatMap(this::fetchItems);
+    private String buildUrl(Integer page) {
+        return UriComponentsBuilder.fromPath("/")
+            .queryParam("gubun", "menu_more")
+            .queryParam("product_cate", "7")
+            .queryParam("chked_val", "")
+            .queryParam("skeyword", "")
+            .queryParam("page", page)
+            .build().toUriString();
     }
 
-    private Flux<Beverage> fetchItems(String url) {
-        return WebClient.create().get().uri(url).retrieve().bodyToMono(String.class)
-            .flatMapMany(this::parse);
+    @Override
+    public Flux<Beverage> createBeverage() {
+        return Flux.range(START_PAGE, END_PAGE).flatMap(page -> fetchItems(buildUrl(page)));
+    }
+
+    private Flux<Beverage> fetchItems(String path) {
+        return webClient.get().uri(path).retrieve().bodyToMono(String.class)
+            .flatMapMany(this::parse)
+            .onErrorResume(e -> Flux.error(
+                new ConnectionException(BASE_URL + path, e)));
     }
 
     private Flux<Beverage> parse(String response) {
-        return Flux.defer(() -> {
-            List<Beverage> beverages = new ArrayList<>();
-            Company cafe = new Cafe(CAFE_KOR_NAME);
+        Company cafe = new Cafe(CAFE_KOR_NAME);
 
+        try {
             Document document = Jsoup.parse(response);
             Elements items = document.select("li");
 
-            for (Element item : items) {
+            return Flux.fromIterable(items).map(item -> {
                 Element h2 = item.select("h2").first();
                 String name = h2.ownText().trim();
                 String calories = extractNumericValue(
@@ -75,9 +83,10 @@ public class CafeEdiyaFactory implements CafeFactory {
                     item.select("dl dt:containsOwn(카페인) + dd").text());
                 Beverage drink = new CafeDrink(cafe, name, calories, sugar, protein, saturatedFat,
                     sodium, caffeine);
-                beverages.add(drink);
-            }
-            return Flux.fromIterable(beverages);
-        });
+                return drink;
+            });
+        } catch (Exception e) {
+            return Flux.error(new ParseException(response, e));
+        }
     }
 }

@@ -1,19 +1,20 @@
 package com.limhm.enemy.sugar.factory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.limhm.enemy.sugar.config.WebClientProvider;
 import com.limhm.enemy.sugar.domain.Beverage;
 import com.limhm.enemy.sugar.domain.Cafe;
 import com.limhm.enemy.sugar.domain.CafeDrink;
 import com.limhm.enemy.sugar.domain.CafeTwosomeRequestBody;
 import com.limhm.enemy.sugar.domain.Company;
+import com.limhm.enemy.sugar.exception.ConnectionException;
+import com.limhm.enemy.sugar.exception.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
@@ -27,15 +28,14 @@ public class CafeTwosomePlaceCoffeeFactory implements CafeFactory {
     private static final String BASE_URL = "https://mo.twosome.co.kr/mn";
     private static final int START_PAGE = 1;
     private static final int END_PAGE = 5;
-    private static final List<String> MID_CDS = new ArrayList<>(List.of("01", "02", "03"));
+    private static final List<String> MID_CD = new ArrayList<>(List.of("01", "02", "03"));
     private static final String CAFE_KOR_NAME = "투썸플레이스";
 
     private final WebClient webClient;
 
-    public CafeTwosomePlaceCoffeeFactory() {
-        this.webClient = WebClient.builder().baseUrl(BASE_URL)
-            .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-            .build();
+    public CafeTwosomePlaceCoffeeFactory(WebClientProvider webClientProvider) {
+        this.webClient = webClientProvider.provideWebClient(BASE_URL,
+            MediaType.APPLICATION_FORM_URLENCODED_VALUE);
     }
 
     /**
@@ -57,7 +57,8 @@ public class CafeTwosomePlaceCoffeeFactory implements CafeFactory {
         return "0";
     }
 
-    private MultiValueMap<String, String> createRequestBodyForMenuInfoList(int page, String midCd) {
+    private MultiValueMap<String, String> createRequestBodyForMenuInfoList(Integer page,
+        String midCd) {
         MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();
         parameters.add("pageNum", String.valueOf(page));
         parameters.add("grtCd", "1");
@@ -68,33 +69,37 @@ public class CafeTwosomePlaceCoffeeFactory implements CafeFactory {
     @Override
     public Flux<Beverage> createBeverage() {
         return Flux.range(START_PAGE, END_PAGE)
-            .flatMap(page -> Flux.fromIterable(MID_CDS).flatMap(midCd -> fetchItems(page, midCd)))
+            .flatMap(page -> Flux.fromIterable(MID_CD).flatMap(midCd -> fetchItems(page, midCd)))
             .flatMap(this::fetchTemperatureOptions).flatMap(this::fetchSizeOptions)
             .flatMap(this::fetchInfo);
     }
 
-    private Flux<CafeTwosomeRequestBody> fetchItems(int page, String midCd) {
+    private Flux<CafeTwosomeRequestBody> fetchItems(Integer page, String midCd) {
         MultiValueMap<String, String> parameters = createRequestBodyForMenuInfoList(page, midCd);
-        return webClient.post().uri("/menuInfoListAjax.json")
-            .bodyValue(parameters).retrieve().bodyToMono(String.class)
-            .flatMapMany(this::parseMenuNameAndCode);
+        String path = "/menuInfoListAjax.json";
+        return webClient.post().uri(path).bodyValue(parameters).retrieve().bodyToMono(String.class)
+            .flatMapMany(this::parseMenuNameAndCode)
+            .onErrorResume(e -> Flux.error(new ConnectionException(BASE_URL + path, e)));
     }
 
     private Flux<CafeTwosomeRequestBody> fetchTemperatureOptions(CafeTwosomeRequestBody request) {
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("menuCd", request.getMenuCode());
         formData.add("grtCd", "1");
-        return webClient.post().uri("/menuAddInfoListAjax.json").bodyValue(formData).retrieve()
-            .bodyToMono(String.class)
-            .flatMapMany(response -> parseTemperatureOptions(response, request));
+        String path = "/menuAddInfoListAjax.json";
+        return webClient.post().uri(path).bodyValue(formData).retrieve().bodyToMono(String.class)
+            .flatMapMany(response -> parseTemperatureOptions(response, request))
+            .onErrorResume(e -> Flux.error(new ConnectionException(BASE_URL + path, e)));
     }
 
     private Flux<CafeTwosomeRequestBody> fetchSizeOptions(CafeTwosomeRequestBody request) {
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("menuCd", request.getMenuCode());
         formData.add("ondoOpt", request.getTemperatureOption());
-        return webClient.post().uri("/menuSizeOptListAjax.json").bodyValue(formData).retrieve()
-            .bodyToMono(String.class).flatMapMany(response -> parseSizeOptions(response, request));
+        String path = "/menuSizeOptListAjax.json";
+        return webClient.post().uri(path).bodyValue(formData).retrieve()
+            .bodyToMono(String.class).flatMapMany(response -> parseSizeOptions(response, request))
+            .onErrorResume(e -> Flux.error(new ConnectionException(BASE_URL + path, e)));
     }
 
     private Flux<Beverage> fetchInfo(CafeTwosomeRequestBody request) {
@@ -102,8 +107,10 @@ public class CafeTwosomePlaceCoffeeFactory implements CafeFactory {
         formData.add("menuCd", request.getMenuCode());
         formData.add("ondoOpt", request.getTemperatureOption());
         formData.add("sizeOpt", request.getSizeOption());
-        return webClient.post().uri("/menuAddInfoCntnListAjax.json").bodyValue(formData).retrieve()
-            .bodyToMono(String.class).flatMapMany(response -> parseInfo(response, request));
+        String path = "/menuAddInfoCntnListAjax.json";
+        return webClient.post().uri(path).bodyValue(formData).retrieve()
+            .bodyToMono(String.class).flatMapMany(response -> parseInfo(response, request))
+            .onErrorResume(e -> Flux.error(new ConnectionException(BASE_URL + path, e)));
     }
 
     private Flux<CafeTwosomeRequestBody> parseMenuNameAndCode(String response) {
@@ -120,28 +127,31 @@ public class CafeTwosomePlaceCoffeeFactory implements CafeFactory {
                         .build();
                 });
             }
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-            return Flux.error(e);
+        } catch (Exception e) {
+            return Flux.error(new ParseException(response, e));
         }
         return Flux.empty();
     }
 
     private Flux<CafeTwosomeRequestBody> parseTemperatureOptions(String response,
         CafeTwosomeRequestBody request) {
-        Document document = Jsoup.parse(response);
-        Elements items = document.select("div.tabs.__layout2 ul li");
+        try {
+            Document document = Jsoup.parse(response);
+            Elements items = document.select("div.tabs.__layout2 ul li");
 
-        return Flux.fromIterable(items).map(item -> {
-            String temperatureOption = item.select("a").attr("data-code");
-            String temperature = item.select("a").text();
-            String menuName = "(" + temperature + ") " + request.getMenuName();
+            return Flux.fromIterable(items).map(item -> {
+                String temperatureOption = item.select("a").attr("data-code");
+                String temperature = item.select("a").text();
+                String menuName = "(" + temperature + ") " + request.getMenuName();
 
-            CafeTwosomeRequestBody newRequest = CafeTwosomeRequestBody.builder()
-                .menuCode(request.getMenuCode()).menuName(menuName)
-                .temperatureOption(temperatureOption).build();
-            return newRequest;
-        });
+                CafeTwosomeRequestBody newRequest = CafeTwosomeRequestBody.builder()
+                    .menuCode(request.getMenuCode()).menuName(menuName)
+                    .temperatureOption(temperatureOption).build();
+                return newRequest;
+            });
+        } catch (Exception e) {
+            return Flux.error(new ParseException(response, e));
+        }
     }
 
     private Flux<CafeTwosomeRequestBody> parseSizeOptions(String response,
@@ -163,9 +173,8 @@ public class CafeTwosomePlaceCoffeeFactory implements CafeFactory {
                     return newRequest;
                 });
             }
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-            return Flux.error(e);
+        } catch (Exception e) {
+            return Flux.error(new ParseException(response, e));
         }
         return Flux.empty();
     }
@@ -190,9 +199,8 @@ public class CafeTwosomePlaceCoffeeFactory implements CafeFactory {
                     saturatedFat, sodium, caffeine);
                 return Flux.just(drink);
             }
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-            return Flux.error(e);
+        } catch (Exception e) {
+            return Flux.error(new ParseException(response, e));
         }
         return Flux.empty();
     }
